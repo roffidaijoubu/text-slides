@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slideshow</title>
+</head>
+
+<body>
+  <style>
+    body,
+    html {
+      font-size: 24px;
+    }
+
+    #slide-content {
+      width: 100%;
+      text-align: center;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: fixed;
+      bottom: 80px;
+      max-width: 80vw;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .ar {
+      font-size: 2rem;
+      margin-bottom: -.25em;
+      padding: 10px 25px;
+      background-color: rgba(0, 0, 0, .8);
+      width: fit-content;
+    }
+
+    .tr {
+      font-style: italic;
+      margin-bottom: -.5em;
+      padding: 5px 15px;
+      background-color: rgba(0, 0, 0, .8);
+      width: fit-content;
+    }
+
+    .id {
+      font-size: 1.25rem;
+      padding: 5px 15px;
+      background-color: rgba(0, 0, 0, .8);
+      width: fit-content;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+  <div id="slide-content" class="slide">
+    <!-- Slide content will be inserted here dynamically -->
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    let slideContent = document.getElementById('slide-content');
+    // Function to update the slide content on the page
+    function updateSlideContent(data) {
+      
+      if (data.ar != "") {
+        slideContent.innerHTML = `
+          <p class="ar">${data.ar}</p>
+          <p class="tr">${data.tr}</p>
+          <p class="id">${data.id}</p>
+        `;
+      } else {
+        slideContent.innerHTML = '';
+      }
+    }
+
+    socket.on('toggleVisibility', () => {
+      if (slideContent) {
+        slideContent.classList.toggle('hidden');
+      }
+    });
+
+    // Listen for 'updateSlide' event from the server
+    socket.on('updateSlide', updateSlideContent);
+  </script>
+</body>
+
+</html>

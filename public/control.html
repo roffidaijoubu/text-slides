@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slideshow Control</title>
+</head>
+
+<body>
+  <style>
+    #control {
+      display: flex;
+      gap: 2px;
+      align-items: center;
+      margin-top: 20px;
+    }
+
+    #control button {
+      padding: 20px;
+      width: 100%;
+    }
+
+    #currentSlide {
+      width: 100%;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      max-width: 80vw;
+      margin: auto;
+    }
+
+    .ar {
+      font-size: 1rem;
+      margin-bottom: -.25em;
+      padding: 10px 25px;
+      width: fit-content;
+    }
+
+    .tr {
+      font-style: italic;
+      margin-bottom: -.5em;
+      padding: 5px 15px;
+      width: fit-content;
+    }
+
+    .id {
+      font-size: 1rem;
+      padding: 5px 15px;
+      width: fit-content;
+    }
+
+    #toggleButton{
+      margin-top: 20px;
+      padding: 15px;
+      width: 100%;
+    }
+  </style>
+  <div>
+    <div>
+      <input type="number" id="goto-page" placeholder="Go to page">
+      <button onclick="gotoSlide()">Go</button>
+    </div>
+    <div id="currentPage"></div>
+  </div>
+  <div id="control">
+    <button onclick="prevSlide()">Previous</button>
+
+    <button onclick="nextSlide()">Next</button>
+  </div>
+  <button id="toggleButton" onclick="toggleVisibility()">Toggle Slide Visibility</button>
+
+
+
+
+  <div id="currentSlide">
+
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    let slides; // Variable to store slide data received from the server
+    const toggleButton = document.getElementById('toggleButton');
+    let isSlideVisible = true;
+
+
+    function toggleVisibility() {
+      socket.emit('toggleVisibility');
+    }
+
+
+    // Function to send 'nextSlide' event to the server
+    function nextSlide() {
+      socket.emit('nextSlide');
+    }
+
+    // Function to send 'prevSlide' event to the server
+    function prevSlide() {
+      socket.emit('prevSlide');
+    }
+
+    // Function to send 'gotoSlide' event to the server with specified index
+    function gotoSlide() {
+      const pageNumber = parseInt(document.getElementById('goto-page').value);
+      if (!isNaN(pageNumber)) {
+        socket.emit('gotoSlide', pageNumber - 1); // Slide index starts from 0
+      }
+    }
+
+    // Function to update the current page number on the page
+    function updateCurrentPageNumber(currentPage) {
+      const currentPageElement = document.getElementById('currentPage');
+      const goToPageElement = document.getElementById('goto-page');
+      currentPageElement.textContent = `Current Page: ${currentPage + 1}/${slides.length}`;
+      goToPageElement.value = (currentPage + 1);
+    }
+
+    // Listen for 'slideData' event from the server to receive slide data
+    socket.on('slideData', (data) => {
+      slides = data;
+    });
+
+    // Listen for 'currentSlideIndex' event from the server to receive the initial slide index
+    socket.on('currentSlideIndex', (index) => {
+      updateCurrentPageNumber(index);
+    });
+
+    // Listen for 'updateSlide' event from the server
+    socket.on('updateSlide', (slide) => {
+      updateCurrentPageNumber(slide['index'] - 1);
+      const slideContent = document.getElementById('currentSlide');
+      slideContent.innerHTML = `
+        <p class="ar">${slide.ar}</p>
+        <p class="tr">${slide.tr}</p>
+        <p class="id">${slide.id}</p>
+      `;
+      console.log(slide)
+    });
+
+
+  </script>
+</body>
+
+</html>
